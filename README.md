@@ -1,120 +1,52 @@
 # System Sherlock
 
-A comprehensive batch script for Windows systems that gathers detailed system and network information. Perfect for learning about your computer's configuration and diagnosing system issues.
+System Sherlock is a **read-only Windows inventory and diagnostics tool** written as a batch script. It is intended for systems you own or are explicitly authorized to assess.
 
-## Overview
+## What changed
 
-**System Sherlock** provides an easy-to-use batch script that displays comprehensive information about your Windows system, hardware, networking configuration, and running processes. This tool is ideal for system administrators, IT professionals, and anyone curious about their computer's specifications.
+The script now:
 
-## Features
-
-The `wow.bat` script collects and displays:
-
-### 1. **Windows OS Information**
-- OS Name, Version, and Build Number
-- System Type (x86 or x64)
-- Installation Date and Last Boot Time
-
-### 2. **Hardware Details**
-- CPU Information
-- Total Physical Memory
-- Disk Drives (Name, Model, Size)
-- Graphics Card Details and Resolution
-
-### 3. **Network Information**
-- IPv4 and IPv6 Addresses
-- Network Configuration (IPCONFIG)
-- Connected Devices and Drivers
-
-### 4. **Running Processes**
-- List of all active processes
-- Process details with memory usage statistics
-
-### 5. **Disk Space Analysis**
-- Logical Disk Storage (Size and Free Space)
-- Volume Information
-
-### 6. **Memory Statistics**
-- Total System Memory
-- Available Free Memory
-
-### 7. **Network Connections**
-- Active network connections and listening ports
-- Routing table information
-- ARP cache (MAC addresses)
-
-### 8. **Network Diagnostics**
-- DNS resolution testing
-- Connectivity tests (Localhost ping)
-- Route tracing to external hosts
-
-### 9. **User and Security**
-- Current logged-in user
-- User accounts on the system
-- Network shares
-
-### 10. **System Settings**
-- Environment Variables
-- File System Statistics
-- Power Configuration
+- Produces timestamped reports in `reports\` instead of only flooding the console.
+- Supports `/quick`, `/full`, `/network`, `/quiet`, and `/out FILE` modes.
+- Uses modern PowerShell CIM queries where practical, with native-command fallbacks for common inventory tasks.
+- Records the current access context and treats `Access is denied` as a diagnostic finding.
+- Makes potentially noisy network tests opt-in with `/network`.
+- Avoids dumping the complete environment, opening external websites, changing directories unexpectedly, or attempting privilege escalation.
+- Includes security-posture checks for Defender, BitLocker, event logs, active services, and sessions when Windows exposes them to the current user.
 
 ## Usage
 
-1. **Download or Clone** this repository
-2. **Run the Script**: Double-click `wow.bat` or run it from Command Prompt:
-   ```cmd
-   wow.bat
-   ```
-3. **Review Output**: The script will display all system information in the console window
+From Command Prompt:
+
+```cmd
+wow.bat
+wow.bat /full /network
+wow.bat /quiet /out C:\Temp\sherlock.txt
+wow.bat /help
+```
+
+Reports are saved to `reports\system-sherlock-YYYYMMDD-HHMMSS.txt` by default. The report can contain usernames, hostnames, IP addresses, process names, and event metadata. Review and redact it before sharing.
+
+## About access restrictions
+
+System Sherlock does **not** bypass Windows permissions, UAC, endpoint-security controls, or account restrictions. There is no legitimate general-purpose way to “get around” an access control without authorization. Instead, the tool helps administrators work within least-privilege boundaries:
+
+1. Run the standard user mode first.
+2. Review the report for explicitly denied commands.
+3. Ask the system owner for the minimum documented role or read-only delegation required.
+4. If approved, run the same script from an authorized administrator session and compare results.
+5. Do not disable security software, change ACLs, harvest credentials, or use exploit-based elevation.
+
+Use a lab VM or an approved test host when evaluating permissions. Obtain written authorization and follow your organization’s change-control and incident-response procedures.
 
 ## Requirements
 
-- Windows 10 or later (recommended)
-- Administrator privileges (for accessing some system information)
-- Command Prompt or PowerShell
+- Windows 10/11 or Windows Server with `cmd.exe`.
+- PowerShell is recommended for CIM and security-posture sections.
+- Administrator rights are **not required**, but some fields will be unavailable to standard users.
 
-## Files
+## Safety notes
 
-- **wow.bat** - Main system information gathering script
-- **README.md** - This file
-- **LICENSE** - Project license
-
-## Learning Objectives
-
-This script helps you learn about:
-- Batch scripting fundamentals
-- Windows command-line utilities
-- System administration commands
-- Network diagnostics tools
-- WMI (Windows Management Instrumentation) queries
-
-## Common Commands Used
-
-| Command | Purpose |
-|---------|---------|
-| `systeminfo` | Display detailed OS and hardware info |
-| `wmic` | Query system components |
-| `ipconfig` | Show network configuration |
-| `tasklist` | List running processes |
-| `netstat` | Display network connections |
-| `tracert` | Trace network routes |
-| `nslookup` | Resolve DNS names |
-| `powercfg` | Query power settings |
-
-## Tips
-
-- **Run as Administrator** for complete system information
-- **Redirect Output**: Save output to a file with `wow.bat > system_info.txt`
-- **Scheduled Runs**: Use Windows Task Scheduler to run periodically for system monitoring
-
-## License
-
-This project is licensed under the terms specified in the LICENSE file.
-
-## Contributing
-
-Feel free to fork this project, submit issues, or improve the script!
-
----
-
-**Happy system exploring! 🔍**
+- The script performs inventory and diagnostics only; it does not modify system state.
+- Network diagnostics are opt-in because they generate traffic.
+- Never upload an unredacted report if it contains internal hostnames, addresses, usernames, or process details.
