@@ -8,22 +8,48 @@ set "MODE=quick"
 set "NETWORK=0"
 set "OUTDIR=%~dp0reports"
 set "OUT="
+set "QUIET="
 
 :args
-if /i "%~1"=="/full" set "MODE=full" & shift & goto args
-if /i "%~1"=="/network" set "NETWORK=1" & shift & goto args
-if /i "%~1"=="/quiet" set "QUIET=1" & shift & goto args
-if /i "%~1"=="/out" if not "%~2"=="" set "OUT=%~2" & shift & shift & goto args
-if not "%~1"=="" if /i not "%~1"=="/?" if /i not "%~1"=="/help" echo Unknown option: %~1
+if /i "%~1"=="/full" (
+  set "MODE=full"
+  shift
+  goto args
+)
+if /i "%~1"=="/network" (
+  set "NETWORK=1"
+  shift
+  goto args
+)
+if /i "%~1"=="/quiet" (
+  set "QUIET=1"
+  shift
+  goto args
+)
+if /i "%~1"=="/out" (
+  if not "%~2"=="" (
+    set "OUT=%~2"
+    shift
+    shift
+    goto args
+  )
+  echo /out requires a file path.
+  exit /b 2
+)
+if /i "%~1"=="/?" goto help
+if /i "%~1"=="/help" goto help
+if not "%~1"=="" (
+  echo Unknown option: %~1
+  shift
+  goto args
+)
 
+after_args
 if not defined OUT (
   if not exist "%OUTDIR%" mkdir "%OUTDIR%" >nul 2>&1
   for /f "usebackq delims=" %%T in (`powershell -NoProfile -Command "Get-Date -Format yyyyMMdd-HHmmss"`) do set "OUT=%OUTDIR%\system-sherlock-%%T.txt"
 )
 if not defined OUT set "OUT=%TEMP%\system-sherlock.txt"
-
-if /i "%~1"=="/?" goto help
-if /i "%~1"=="/help" goto help
 
 >"%OUT%" echo System Sherlock - Read-only Windows diagnostic report
 >>"%OUT%" echo Generated: %DATE% %TIME%
@@ -68,7 +94,7 @@ if /i "%MODE%"=="full" (
 )
 
 call :section "USER AND SHARED-RESOURCE INVENTORY"
-call :run "echo Current user: & whoami"
+call :run "echo Current user: ^& whoami"
 call :run "net user"
 call :run "net share"
 call :run "query session"
@@ -109,7 +135,7 @@ exit /b 0
 >>"%OUT%" echo.
 >>"%OUT%" echo [POWERSHELL] %~1
 >>"%OUT%" echo ------------------------------------------------------------
-powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "%~1" >>"%OUT%" 2>&1
+powershell.exe -NoProfile -NonInteractive -Command "%~1" >>"%OUT%" 2>&1
 exit /b 0
 
 :help
@@ -123,6 +149,6 @@ echo /out FILE Write to a specific report path.
 echo.
 echo This tool does not bypass permissions, elevate privileges, alter accounts,
 echo access files, or retrieve credentials. Run it only on systems you own or are
- echo authorized to assess. Missing permissions are reported safely.
+echo authorized to assess. Missing permissions are reported safely.
 pause
 exit /b 0
