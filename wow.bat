@@ -87,6 +87,8 @@ call :ps "Get-ChildItem Env: ^| Where-Object Name -match '^(OS|PROCESSOR_|NUMBER
 >>"%OUT%" echo Review and redact before sharing.
 if not defined QUIET type "%OUT%"
 echo Report saved to: "%OUT%"
+echo.
+pause
 exit /b 0
 
 :section
@@ -122,4 +124,5 @@ echo.
 echo This tool does not bypass permissions, elevate privileges, alter accounts,
 echo access files, or retrieve credentials. Run it only on systems you own or are
  echo authorized to assess. Missing permissions are reported safely.
+pause
 exit /b 0
